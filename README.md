@@ -47,3 +47,56 @@ servers = [
 > Примечание: ip-адреса и имя интерфейса выбраны исходя из особенности окружения.
 
 В зависимости от имени хоста, вызыввается нужный `playbook`: `playbook-clnt.yml`или `playbook-bckp.yml`)
+
+После установки виртуальных машин, необходимо зайти на `clnt` и инициализировать репозиторий `borg`:
+
+```
+# borg init --encryption=repokey borg@192.168.31.201:/var/backup/
+```
+<summary>вывод</summary>
+```
+The authenticity of host '192.168.31.201 (192.168.31.201)' can't be established.
+ECDSA key fingerprint is SHA256:ziBP4DclaJB/fKLgKTOIpxQlwb/PQUDqorDONyqV9cs.
+ECDSA key fingerprint is MD5:00:8a:bd:d3:ee:42:54:d0:37:5e:30:3b:bc:4a:bf:5a.
+Are you sure you want to continue connecting (yes/no)? yes
+Remote: Warning: Permanently added '192.168.31.201' (ECDSA) to the list of known hosts.
+Enter new passphrase: 
+Enter same passphrase again: 
+Do you want your passphrase to be displayed for verification? [yN]: y
+Your passphrase (between double-quotes): "123"
+Make sure the passphrase displayed above is exactly what you wanted.
+
+By default repositories initialized with this version will produce security
+errors if written to with an older version (up to and including Borg 1.0.8).
+
+If you want to use these older versions, you can disable the check by running:
+borg upgrade --disable-tam ssh://borg@192.168.31.201/var/backup
+
+See https://borgbackup.readthedocs.io/en/stable/changes.html#pre-1-0-9-manifest-spoofing-vulnerability for details about the security implications.
+
+IMPORTANT: you will need both KEY AND PASSPHRASE to access this repo!
+If you used a repokey mode, the key is stored in the repo, but you should back it up separately.
+Use "borg key export" to export the key, optionally in printable format.
+Write down the passphrase. Store both at safe place(s).
+```
+Создание бэкапа, проверка:
+```
+# borg create --stats --list borg@192.168.31.201:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
+...
+------------------------------------------------------------------------------
+Archive name: etc-2023-03-01_20:07:50
+Archive fingerprint: 0f6f6a7ec1f30482c680e26b9adefa5c08c4f8083785b71190fe0bef7e02e8f4
+Time (start): Wed, 2023-03-01 20:07:53
+Time (end):   Wed, 2023-03-01 20:07:56
+Duration: 2.76 seconds
+Number of files: 1713
+Utilization of max. archive size: 0%
+------------------------------------------------------------------------------
+                       Original size      Compressed size    Deduplicated size
+This archive:               28.51 MB             13.53 MB             11.88 MB
+All archives:               28.51 MB             13.53 MB             11.88 MB
+
+                       Unique chunks         Total chunks
+Chunk index:                    1293                 1710
+------------------------------------------------------------------------------
+```
