@@ -84,7 +84,7 @@ Write down the passphrase. Store both at safe place(s).
   ```
 </details>
 
-Создание бэкапа, проверка:
+Создание нескольких бэкапов, проверка:
 ```
 # borg create --stats --list borg@192.168.31.201:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
 ```
@@ -92,6 +92,7 @@ Write down the passphrase. Store both at safe place(s).
   <summary>Вывод команды</summary>
 
   ```
+...
 ------------------------------------------------------------------------------
 Archive name: etc-2023-03-01_20:07:50
 Archive fingerprint: 0f6f6a7ec1f30482c680e26b9adefa5c08c4f8083785b71190fe0bef7e02e8f4
@@ -110,3 +111,73 @@ Chunk index:                    1293                 1710
 ------------------------------------------------------------------------------
   ```
 </details>
+
+```
+# borg list borg@192.168.31.201:/var/backup/
+Enter passphrase for key ssh://borg@192.168.31.201/var/backup: 
+etc-2023-03-01_20:07:50              Wed, 2023-03-01 20:07:53 [0f6f6a7ec1f30482c680e26b9adefa5c08c4f8083785b71190fe0bef7e02e8f4]
+etc-2023-03-01_20:17:46              Wed, 2023-03-01 20:17:50 [af7afd59a22133810b624f25651456b6e7a05183593512b19b15e23d98fd384d]
+```
+Запуск сервиса, таймера и проверка:
+```
+# systemctl start borg-backup.service
+```
+```
+# systemctl enable --now borg-backup.timer
+```
+```
+# borg list borg@192.168.31.201:/var/backup/
+Enter passphrase for key ssh://borg@192.168.31.201/var/backup: 
+etc-2023-03-01_21:01:02              Wed, 2023-03-01 21:01:03 [69aabd7c1ecd6c6e39949820c02e3e1b99383c166c91a937db5ee406f2f6b58d]
+```
+Остановка бэкапа:
+```
+# systemctl stop borg-backup.timer
+```
+Удаление, восстановление, перемещение файла:
+```
+# rm -f /etc/hostname 
+```
+```
+# borg extract borg@192.168.31.201:/var/backup/::etc-2023-03-01_21:03:01 etc/hostname
+Enter passphrase for key ssh://borg@192.168.31.201/var/backup: 
+```
+```
+# cp etc/hostname /etc/hostname
+```
+```
+# ls -la /etc/hostname 
+-rw-r--r--. 1 root root 5 Mar  1 21:11 /etc/hostname
+```
+
+> Примечание: для успешного извлечения файла, необходимо установить кодировку: `LANG=en_US.UTF-8`
+
+Логирование процесса бэкапа осуществляется в `/var/log/messages`:
+```
+# tail -f /var/log/messages 
+```
+<details>
+  <summary>Вывод команды</summary>
+
+  ```
+Mar  1 21:14:55 localhost systemd: Started Borg Backup.
+Mar  1 21:16:00 localhost systemd: Starting Borg Backup...
+Mar  1 21:16:03 localhost borg: ------------------------------------------------------------------------------
+Mar  1 21:16:03 localhost borg: Archive name: etc-2023-03-01_21:16:01
+Mar  1 21:16:03 localhost borg: Archive fingerprint: feea6d565911cdd386af2a7c643723eb2ce179d00856659c8158254740c64cf0
+Mar  1 21:16:03 localhost borg: Time (start): Wed, 2023-03-01 21:16:02
+Mar  1 21:16:03 localhost borg: Time (end):   Wed, 2023-03-01 21:16:03
+Mar  1 21:16:03 localhost borg: Duration: 0.56 seconds
+Mar  1 21:16:03 localhost borg: Number of files: 1714
+Mar  1 21:16:03 localhost borg: Utilization of max. archive size: 0%
+Mar  1 21:16:03 localhost borg: ------------------------------------------------------------------------------
+Mar  1 21:16:03 localhost borg: Original size      Compressed size    Deduplicated size
+Mar  1 21:16:03 localhost borg: This archive:               28.52 MB             13.53 MB             64.31 kB
+Mar  1 21:16:03 localhost borg: All archives:               57.03 MB             27.07 MB             11.94 MB
+Mar  1 21:16:03 localhost borg: Unique chunks         Total chunks
+Mar  1 21:16:03 localhost borg: Chunk index:                    1294                 3420
+Mar  1 21:16:03 localhost borg: ------------------------------------------------------------------------------
+  ```
+</details>
+
+
