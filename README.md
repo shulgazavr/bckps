@@ -24,6 +24,7 @@
 ## Описание реализации.
 [Vagrantfile](https://github.com/shulgazavr/bckps/blob/main/Vagrantfile), поднимающий 2 сервера: `clnt` и `bckp`. 
 > Порядок имеет значение! Сначала `clnt`, потом `bckp`, т.к. только так средствами `ansible` удалось перенести публичный ключ на сервер.
+
 Особенности н астройка параметров сети:
 ```
 servers = [
@@ -53,9 +54,11 @@ servers = [
 ```
 # borg init --encryption=repokey borg@192.168.31.201:/var/backup/
 ```
-<summary>вывод</summary>
-```
-The authenticity of host '192.168.31.201 (192.168.31.201)' can't be established.
+<details>
+  <summary>Вывод команды</summary>
+
+  ```
+  The authenticity of host '192.168.31.201 (192.168.31.201)' can't be established.
 ECDSA key fingerprint is SHA256:ziBP4DclaJB/fKLgKTOIpxQlwb/PQUDqorDONyqV9cs.
 ECDSA key fingerprint is MD5:00:8a:bd:d3:ee:42:54:d0:37:5e:30:3b:bc:4a:bf:5a.
 Are you sure you want to continue connecting (yes/no)? yes
@@ -78,11 +81,17 @@ IMPORTANT: you will need both KEY AND PASSPHRASE to access this repo!
 If you used a repokey mode, the key is stored in the repo, but you should back it up separately.
 Use "borg key export" to export the key, optionally in printable format.
 Write down the passphrase. Store both at safe place(s).
-```
+  ```
+</details>
+
 Создание бэкапа, проверка:
 ```
 # borg create --stats --list borg@192.168.31.201:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
-...
+```
+<details>
+  <summary>Вывод команды</summary>
+
+  ```
 ------------------------------------------------------------------------------
 Archive name: etc-2023-03-01_20:07:50
 Archive fingerprint: 0f6f6a7ec1f30482c680e26b9adefa5c08c4f8083785b71190fe0bef7e02e8f4
@@ -99,4 +108,5 @@ All archives:               28.51 MB             13.53 MB             11.88 MB
                        Unique chunks         Total chunks
 Chunk index:                    1293                 1710
 ------------------------------------------------------------------------------
-```
+  ```
+</details>
