@@ -1,0 +1,47 @@
+---
+- hosts: "clnt"
+  become: true
+  gather_facts: no
+
+  tasks: 
+# prepeare system    
+  - name: INSTALL mc
+    yum: name=mc state=present
+
+# install borgbackup
+  - name: INSTALL EPEL-RELEASE REPO
+    yum: name=epel-release state=present
+
+  - name: INSTALL BORGBACKUP
+    yum: name=borgbackup state=present
+
+  - name: COPY borg-backup.service 
+    copy:
+      src: cnfgs/borg-backup.service
+      dest: /etc/systemd/system/
+
+  - name: COPY borg-backup.service 
+    copy:
+      src: cnfgs/borg-backup.timer
+      dest: /etc/systemd/system/     
+
+  - name: create ssh dir
+    file:
+      path: /root/.ssh/
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+  
+  - name: Generate an OpenSSH keypair
+    openssh_keypair:
+      path: /root/.ssh/id_rsa
+      owner: root
+      group: root
+      force: True
+
+  - name: Transfer file from clnt to host
+    fetch:
+      src: /root/.ssh/id_rsa.pub
+      dest: files/cnfgs/authorized_keys
+      flat: true
